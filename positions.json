@@ -1,15 +1,15 @@
 {
-  "updated": "2026-05-21T20:43:02.464977+00:00",
-  "updated_et": "2026-05-21 16:43 ET",
-  "total_unrealized_pnl": 69.67,
+  "updated": "2026-05-21T20:48:02.495576+00:00",
+  "updated_et": "2026-05-21 16:48 ET",
+  "total_unrealized_pnl": 70.67,
   "open_count": 5,
   "positions": {
     "EURUSD": {
       "dir": 1,
       "size": 5660,
       "entry": 1.16062,
-      "price": 1.1617,
-      "pnl_usd": 6.11
+      "price": 1.16175,
+      "pnl_usd": 6.4
     },
     "GBPUSD": {
       "dir": -1,
@@ -22,64 +22,64 @@
       "dir": 0,
       "size": 0,
       "entry": 0,
-      "price": 0.78666,
+      "price": 0.786645,
       "pnl_usd": 0
     },
     "AUDUSD": {
       "dir": 0,
       "size": 0,
       "entry": 0,
-      "price": 0.71504,
+      "price": 0.7151,
       "pnl_usd": 0
     },
     "NZDUSD": {
       "dir": 1,
       "size": 6355,
       "entry": 0.5838,
-      "price": 0.587465,
-      "pnl_usd": 23.29
+      "price": 0.587495,
+      "pnl_usd": 23.48
     },
     "USDJPY": {
       "dir": 0,
       "size": 0,
       "entry": 0,
-      "price": 158.995,
+      "price": 159.0025,
       "pnl_usd": 0
     },
     "USDCAD": {
       "dir": 0,
       "size": 0,
       "entry": 0,
-      "price": 1.37783,
+      "price": 1.37789,
       "pnl_usd": 0
     },
     "EURAUD": {
       "dir": 0,
       "size": 0,
       "entry": 0,
-      "price": 1.624685,
+      "price": 1.624565,
       "pnl_usd": 0
     },
     "GBPAUD": {
       "dir": -1,
       "size": 2726,
       "entry": 1.88412,
-      "price": 1.878685,
-      "pnl_usd": 10.59
+      "price": 1.878525,
+      "pnl_usd": 10.91
     },
     "EURGBP": {
       "dir": 0,
       "size": 0,
       "entry": 0,
-      "price": 0.86476,
+      "price": 0.864825,
       "pnl_usd": 0
     },
     "GBPNZD": {
       "dir": -1,
       "size": 4369,
       "entry": 2.29556,
-      "price": 2.28665,
-      "pnl_usd": 22.87
+      "price": 2.286565,
+      "pnl_usd": 23.09
     }
   }
 }
