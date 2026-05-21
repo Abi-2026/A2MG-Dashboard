@@ -1,85 +1,85 @@
 {
-  "updated": "2026-05-21T20:38:02.910417+00:00",
-  "updated_et": "2026-05-21 16:38 ET",
-  "total_unrealized_pnl": 68.51,
+  "updated": "2026-05-21T20:43:02.464977+00:00",
+  "updated_et": "2026-05-21 16:43 ET",
+  "total_unrealized_pnl": 69.67,
   "open_count": 5,
   "positions": {
     "EURUSD": {
       "dir": 1,
       "size": 5660,
       "entry": 1.16062,
-      "price": 1.16166,
-      "pnl_usd": 5.89
+      "price": 1.1617,
+      "pnl_usd": 6.11
     },
     "GBPUSD": {
       "dir": -1,
       "size": 10000,
       "entry": 1.34402,
-      "price": 1.343405,
-      "pnl_usd": 6.15
+      "price": 1.34334,
+      "pnl_usd": 6.8
     },
     "USDCHF": {
       "dir": 0,
       "size": 0,
       "entry": 0,
-      "price": 0.78664,
+      "price": 0.78666,
       "pnl_usd": 0
     },
     "AUDUSD": {
       "dir": 0,
       "size": 0,
       "entry": 0,
-      "price": 0.71505,
+      "price": 0.71504,
       "pnl_usd": 0
     },
     "NZDUSD": {
       "dir": 1,
       "size": 6355,
       "entry": 0.5838,
-      "price": 0.587485,
-      "pnl_usd": 23.42
+      "price": 0.587465,
+      "pnl_usd": 23.29
     },
     "USDJPY": {
       "dir": 0,
       "size": 0,
       "entry": 0,
-      "price": 158.988,
+      "price": 158.995,
       "pnl_usd": 0
     },
     "USDCAD": {
       "dir": 0,
       "size": 0,
       "entry": 0,
-      "price": 1.37787,
+      "price": 1.37783,
       "pnl_usd": 0
     },
     "EURAUD": {
       "dir": 0,
       "size": 0,
       "entry": 0,
-      "price": 1.62458,
+      "price": 1.624685,
       "pnl_usd": 0
     },
     "GBPAUD": {
       "dir": -1,
       "size": 2726,
       "entry": 1.88412,
-      "price": 1.878745,
-      "pnl_usd": 10.48
+      "price": 1.878685,
+      "pnl_usd": 10.59
     },
     "EURGBP": {
       "dir": 0,
       "size": 0,
       "entry": 0,
-      "price": 0.8647,
+      "price": 0.86476,
       "pnl_usd": 0
     },
     "GBPNZD": {
       "dir": -1,
       "size": 4369,
       "entry": 2.29556,
-      "price": 2.286765,
-      "pnl_usd": 22.57
+      "price": 2.28665,
+      "pnl_usd": 22.87
     }
   }
 }
