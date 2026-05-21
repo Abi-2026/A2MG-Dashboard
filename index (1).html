@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A2MG Trading — P&L Dashboard</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; color: #1a1a1a; }
+  
+  .header { background: #1F4E79; color: white; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; }
+  .header-title { font-size: 16px; font-weight: 600; letter-spacing: 0.02em; }
+  .header-right { text-align: right; }
+  .clock { font-size: 13px; font-weight: 500; }
+  .last-update { font-size: 10px; opacity: 0.7; margin-top: 2px; }
+
+  .totals { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 12px; background: white; border-bottom: 1px solid #e5e5e5; }
+  .tot-card { background: #f8f9fa; border-radius: 8px; padding: 10px 12px; }
+  .tot-label { font-size: 11px; color: #666; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .tot-val { font-size: 22px; font-weight: 600; }
+  .pos { color: #1a7a3c; }
+  .neg { color: #c0392b; }
+  .neu { color: #1a1a1a; }
+
+  .section-label { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.05em; padding: 10px 16px 4px; background: #f5f5f5; }
+
+  .pair-row { display: flex; align-items: center; padding: 10px 16px; background: white; border-bottom: 1px solid #f0f0f0; gap: 8px; }
+  .pair-name { font-size: 13px; font-weight: 600; width: 68px; flex-shrink: 0; color: #1a1a1a; }
+  .dir-badge { font-size: 10px; font-weight: 700; padding: 3px 7px; border-radius: 4px; width: 42px; text-align: center; flex-shrink: 0; letter-spacing: 0.03em; }
+  .long-badge  { background: #e8f5e9; color: #1a7a3c; }
+  .short-badge { background: #fdecea; color: #c0392b; }
+  .flat-badge  { background: #f0f0f0; color: #999; }
+  .pair-mid { flex: 1; }
+  .pair-size  { font-size: 12px; color: #555; }
+  .pair-entry { font-size: 11px; color: #999; margin-top: 1px; }
+  .pair-right { text-align: right; flex-shrink: 0; }
+  .pair-price { font-size: 12px; color: #555; }
+  .pair-pnl   { font-size: 13px; font-weight: 600; margin-top: 1px; }
+
+  .controls { padding: 12px 16px; background: white; border-top: 1px solid #e5e5e5; display: flex; gap: 8px; position: sticky; bottom: 0; }
+  .btn { flex: 1; padding: 10px; border: 1px solid #ddd; background: white; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; color: #1a1a1a; }
+  .btn:active { background: #f0f0f0; }
+  .btn-primary { background: #1F4E79; color: white; border-color: #1F4E79; }
+  .btn-primary:active { background: #163a5e; }
+
+  .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: flex-end; }
+  .modal-bg.open { display: flex; }
+  .modal { background: white; border-radius: 16px 16px 0 0; padding: 20px 16px; width: 100%; }
+  .modal h3 { font-size: 15px; font-weight: 600; margin-bottom: 16px; }
+  .form-row { margin-bottom: 12px; }
+  .form-row label { font-size: 12px; color: #666; display: block; margin-bottom: 4px; }
+  .form-row select, .form-row input { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; color: #1a1a1a; background: white; }
+  .form-btns { display: flex; gap: 8px; margin-top: 16px; }
+
+  .status-bar { text-align: center; padding: 6px; font-size: 11px; color: #888; background: #f5f5f5; }
+  .status-ok { color: #1a7a3c; }
+  .status-err { color: #c0392b; }
+
+  .api-config { background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; margin: 12px; padding: 12px; font-size: 12px; color: #856404; }
+  .api-config strong { display: block; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-title">A2MG Trading</div>
+  <div class="header-right">
+    <div class="clock" id="clock">--:--:-- ET</div>
+    <div class="last-update" id="last-update">not updated</div>
+  </div>
+</div>
+
+<div class="totals">
+  <div class="tot-card">
+    <div class="tot-label">Unrealized P&L</div>
+    <div class="tot-val neu" id="tot-unreal">$0</div>
+  </div>
+  <div class="tot-card">
+    <div class="tot-label">Realized P&L</div>
+    <div class="tot-val neu" id="tot-real">$0</div>
+  </div>
+  <div class="tot-card">
+    <div class="tot-label">Open Positions</div>
+    <div class="tot-val neu" id="tot-open">0 / 11</div>
+  </div>
+  <div class="tot-card">
+    <div class="tot-label">Total P&L</div>
+    <div class="tot-val neu" id="tot-total">$0</div>
+  </div>
+</div>
+
+<div id="api-warning" class="api-config" style="display:none;">
+  <strong>⚠️ Add your Oanda API key</strong>
+  Open this file, find the CONFIG section at the top of the script, and paste in your API key and account ID.
+</div>
+
+<div class="status-bar" id="status-bar">Waiting for price update...</div>
+
+<div class="section-label">Positions</div>
+<div id="pairs-list"></div>
+
+<div class="controls">
+  <button class="btn" onclick="refreshPrices()">↻ Refresh</button>
+  <button class="btn btn-primary" onclick="openModal()">+ Position</button>
+</div>
+
+<div class="modal-bg" id="modal-bg" onclick="closeModalBg(event)">
+  <div class="modal">
+    <h3>Update Position</h3>
+    <div class="form-row">
+      <label>Pair</label>
+      <select id="f-pair"></select>
+    </div>
+    <div class="form-row">
+      <label>Direction</label>
+      <select id="f-dir">
+        <option value="1">Long</option>
+        <option value="-1">Short</option>
+        <option value="0">Flat</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label>Position Size</label>
+      <input type="number" id="f-size" placeholder="e.g. 5000000" />
+    </div>
+    <div class="form-row">
+      <label>Entry Price</label>
+      <input type="number" id="f-entry" step="0.00001" placeholder="e.g. 1.08500" />
+    </div>
+    <div class="form-row">
+      <label>Realized P&L on This Trade ($)</label>
+      <input type="number" id="f-realized" placeholder="0 if still open" />
+    </div>
+    <div class="form-btns">
+      <button class="btn" style="flex:1" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" style="flex:2" onclick="savePosition()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────
+// CONFIG — paste your credentials here
+// ─────────────────────────────────────────────────────────────
+const OANDA_API_KEY    = "8f71cd18bc273300b935a1649ff77eef-e469ed5bc2fe16dae9b95a4e4ac69414";
+const OANDA_ACCOUNT_ID = "001-001-10108778-001";
+const OANDA_ENV        = "live"; // "live" or "practice"
+const BASE_URL         = OANDA_ENV === "live"
+  ? "https://api-fxtrade.oanda.com"
+  : "https://api-fxpractice.oanda.com";
+
+// Auto-refresh every 60 seconds
+const AUTO_REFRESH_SECS = 60;
+
+// Fetch positions directly from Oanda API
+async function fetchPositions() {
+  if (!OANDA_API_KEY || OANDA_API_KEY === "YOUR_API_KEY_HERE") return;
+  
+  try {
+    // Get open trades
+    const tradesUrl = `${BASE_URL}/v3/accounts/${OANDA_ACCOUNT_ID}/openTrades`;
+    const r = await fetch(tradesUrl, {
+      headers: { "Authorization": `Bearer ${OANDA_API_KEY}` }
+    });
+    
+    if (!r.ok) return;
+    const data = await r.json();
+    
+    // Reset all positions to flat
+    PAIRS.forEach(p => {
+      state.positions[p] = { dir: 0, size: 0, entry: 0 };
+    });
+    
+    // Fill in open trades
+    const OANDA_TO_PAIR = {};
+    Object.keys(OANDA_MAP).forEach(k => OANDA_TO_PAIR[OANDA_MAP[k]] = k);
+    
+    (data.trades || []).forEach(t => {
+      const pair = OANDA_TO_PAIR[t.instrument];
+      if (pair) {
+        const units = parseInt(parseFloat(t.currentUnits));
+        state.positions[pair] = {
+          dir: units > 0 ? 1 : -1,
+          size: Math.abs(units),
+          entry: parseFloat(t.price)
+        };
+      }
+    });
+
+    const now = new Date().toLocaleTimeString("en-US", {
+      timeZone: "America/New_York", hour:"2-digit", minute:"2-digit"
+    });
+    document.getElementById("last-update").textContent = "synced " + now + " ET";
+    
+    saveState();
+    render();
+  } catch(e) {
+    console.log("Position fetch error:", e);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+const PAIRS = ["EURUSD","GBPUSD","USDCHF","AUDUSD","NZDUSD",
+               "USDJPY","USDCAD","EURAUD","GBPAUD","EURGBP","GBPNZD"];
+
+const OANDA_MAP = {
+  EURUSD:"EUR_USD", GBPUSD:"GBP_USD", USDCHF:"USD_CHF",
+  AUDUSD:"AUD_USD", NZDUSD:"NZD_USD", USDJPY:"USD_JPY",
+  USDCAD:"USD_CAD", EURAUD:"EUR_AUD", GBPAUD:"GBP_AUD",
+  EURGBP:"EUR_GBP", GBPNZD:"GBP_NZD"
+};
+
+const FX_TYPE = {
+  EURUSD:"USD", GBPUSD:"USD", AUDUSD:"USD", NZDUSD:"USD",
+  USDCHF:"Inv", USDCAD:"Inv", USDJPY:"Inv",
+  EURAUD:"Cross", GBPAUD:"Cross", EURGBP:"Cross", GBPNZD:"Cross"
+};
+
+// Load saved state from localStorage
+function loadState() {
+  try {
+    const s = localStorage.getItem("a2mg_state");
+    return s ? JSON.parse(s) : null;
+  } catch(e) { return null; }
+}
+
+function saveState() {
+  try { localStorage.setItem("a2mg_state", JSON.stringify(state)); } catch(e) {}
+}
+
+const saved = loadState();
+const state = {
+  positions: saved?.positions || {},
+  prices: saved?.prices || {},
+  realized: saved?.realized || 0
+};
+
+PAIRS.forEach(p => {
+  if (!state.positions[p]) state.positions[p] = { dir: 0, size: 0, entry: 0 };
+  if (!state.prices[p]) state.prices[p] = 0;
+});
+
+// ─────────────────────────────────────────────────────────────
+// Oanda price fetch
+// ─────────────────────────────────────────────────────────────
+async function fetchPrices() {
+  if (!OANDA_API_KEY || OANDA_API_KEY === "YOUR_API_KEY_HERE") {
+    document.getElementById("api-warning").style.display = "block";
+    setStatus("No API key configured", false);
+    return;
+  }
+
+  const instruments = PAIRS.map(p => OANDA_MAP[p]).join(",");
+  const url = `${BASE_URL}/v3/accounts/${OANDA_ACCOUNT_ID}/pricing?instruments=${instruments}`;
+
+  try {
+    const r = await fetch(url, {
+      headers: { "Authorization": `Bearer ${OANDA_API_KEY}` }
+    });
+
+    if (!r.ok) {
+      setStatus(`API error: ${r.status}`, false);
+      return;
+    }
+
+    const data = await r.json();
+    data.prices.forEach(p => {
+      const pair = Object.keys(OANDA_MAP).find(k => OANDA_MAP[k] === p.instrument);
+      if (pair) {
+        state.prices[pair] = (parseFloat(p.asks[0].price) + parseFloat(p.bids[0].price)) / 2;
+      }
+    });
+
+    saveState();
+    setStatus("Live — Oanda prices", true);
+    document.getElementById("last-update").textContent = "updated " + new Date().toLocaleTimeString("en-US", { timeZone: "America/New_York", hour:"2-digit", minute:"2-digit" }) + " ET";
+    render();
+
+  } catch(e) {
+    setStatus("Connection error — check API key", false);
+  }
+}
+
+function setStatus(msg, ok) {
+  const el = document.getElementById("status-bar");
+  el.textContent = msg;
+  el.className = "status-bar " + (ok ? "status-ok" : "status-err");
+}
+
+// ─────────────────────────────────────────────────────────────
+// P&L calculation
+// ─────────────────────────────────────────────────────────────
+function calcPnl(pair, pos) {
+  if (!pos.dir || !pos.size || !pos.entry || !state.prices[pair]) return 0;
+  const curr  = state.prices[pair];
+  const diff  = curr - pos.entry;
+  const raw   = pos.dir * pos.size * diff;
+  const type  = FX_TYPE[pair];
+  if (type === "USD") return raw;
+  if (type === "Inv") return raw / curr;
+  // Cross — use quote currency rate
+  const qRate = getQuoteRate(pair);
+  return raw * qRate;
+}
+
+function getQuoteRate(pair) {
+  const map = { EURAUD:"AUDUSD", GBPAUD:"AUDUSD", EURGBP:"GBPUSD", GBPNZD:"NZDUSD" };
+  const ratePair = map[pair];
+  return ratePair && state.prices[ratePair] ? state.prices[ratePair] : 1;
+}
+
+// ─────────────────────────────────────────────────────────────
+// Render
+// ─────────────────────────────────────────────────────────────
+function fmtPnl(v) {
+  const abs = Math.abs(Math.round(v)).toLocaleString();
+  return (v >= 0 ? "+$" : "-$") + abs;
+}
+
+function fmtSize(s) {
+  if (!s) return "—";
+  if (s >= 1000000) return (s/1000000).toFixed(1) + "M";
+  if (s >= 1000)    return (s/1000).toFixed(0) + "K";
+  return s.toString();
+}
+
+function render() {
+  let unreal = 0, open = 0;
+
+  const html = PAIRS.map(pair => {
+    const pos = state.positions[pair];
+    const pnl = calcPnl(pair, pos);
+    unreal += pnl;
+    if (pos.dir !== 0) open++;
+
+    const dirLabel = pos.dir > 0 ? "LONG" : pos.dir < 0 ? "SHORT" : "FLAT";
+    const badgeClass = pos.dir > 0 ? "long-badge" : pos.dir < 0 ? "short-badge" : "flat-badge";
+    const pnlClass = pnl > 0 ? "pos" : pnl < 0 ? "neg" : "neu";
+    const pnlStr = pos.dir !== 0 ? fmtPnl(pnl) : "—";
+    const priceStr = state.prices[pair] ? state.prices[pair].toFixed(pair === "USDJPY" ? 3 : 5) : "—";
+    const entryStr = pos.entry ? pos.entry.toFixed(pair === "USDJPY" ? 3 : 5) : "";
+
+    return `<div class="pair-row" onclick="editPair('${pair}')">
+      <span class="pair-name">${pair}</span>
+      <span class="dir-badge ${badgeClass}">${dirLabel}</span>
+      <div class="pair-mid">
+        <div class="pair-size">${fmtSize(pos.size)}</div>
+        ${entryStr ? `<div class="pair-entry">entry ${entryStr}</div>` : ""}
+      </div>
+      <div class="pair-right">
+        <div class="pair-price">${priceStr}</div>
+        <div class="pair-pnl ${pnlClass}">${pnlStr}</div>
+      </div>
+    </div>`;
+  }).join("");
+
+  document.getElementById("pairs-list").innerHTML = html;
+
+  const total = unreal + state.realized;
+  const uc = unreal > 0 ? "pos" : unreal < 0 ? "neg" : "neu";
+  const rc = state.realized > 0 ? "pos" : state.realized < 0 ? "neg" : "neu";
+  const tc = total > 0 ? "pos" : total < 0 ? "neg" : "neu";
+
+  document.getElementById("tot-unreal").className = "tot-val " + uc;
+  document.getElementById("tot-unreal").textContent = fmtPnl(unreal);
+  document.getElementById("tot-real").className = "tot-val " + rc;
+  document.getElementById("tot-real").textContent = fmtPnl(state.realized);
+  document.getElementById("tot-open").className = "tot-val neu";
+  document.getElementById("tot-open").textContent = open + " / 11";
+  document.getElementById("tot-total").className = "tot-val " + tc;
+  document.getElementById("tot-total").textContent = fmtPnl(total);
+}
+
+// ─────────────────────────────────────────────────────────────
+// Modal
+// ─────────────────────────────────────────────────────────────
+const pairSelect = document.getElementById("f-pair");
+PAIRS.forEach(p => {
+  const o = document.createElement("option");
+  o.value = p; o.textContent = p;
+  pairSelect.appendChild(o);
+});
+
+function openModal() {
+  document.getElementById("modal-bg").classList.add("open");
+}
+
+function closeModal() {
+  document.getElementById("modal-bg").classList.remove("open");
+}
+
+function closeModalBg(e) {
+  if (e.target === document.getElementById("modal-bg")) closeModal();
+}
+
+function editPair(pair) {
+  const pos = state.positions[pair];
+  document.getElementById("f-pair").value = pair;
+  document.getElementById("f-dir").value = pos.dir;
+  document.getElementById("f-size").value = pos.size || "";
+  document.getElementById("f-entry").value = pos.entry || "";
+  document.getElementById("f-realized").value = "";
+  openModal();
+}
+
+function savePosition() {
+  const pair = document.getElementById("f-pair").value;
+  const dir  = parseInt(document.getElementById("f-dir").value);
+  const size = parseFloat(document.getElementById("f-size").value) || 0;
+  const entry = parseFloat(document.getElementById("f-entry").value) || state.prices[pair] || 0;
+  const realized = parseFloat(document.getElementById("f-realized").value) || 0;
+  state.positions[pair] = { dir, size, entry };
+  state.realized += realized;
+  saveState();
+  closeModal();
+  render();
+}
+
+function refreshPrices() {
+  setStatus("Fetching prices...", true);
+  fetchPrices();
+}
+
+// ─────────────────────────────────────────────────────────────
+// Clock
+// ─────────────────────────────────────────────────────────────
+function updateClock() {
+  const t = new Date().toLocaleTimeString("en-US", {
+    timeZone: "America/New_York",
+    hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false
+  });
+  document.getElementById("clock").textContent = t + " ET";
+}
+
+// ─────────────────────────────────────────────────────────────
+// Init
+// ─────────────────────────────────────────────────────────────
+setInterval(updateClock, 1000);
+setInterval(fetchPrices, AUTO_REFRESH_SECS * 1000);
+setInterval(fetchPositions, AUTO_REFRESH_SECS * 1000);
+updateClock();
+render();
+fetchPositions();
+fetchPrices();
+</script>
+</body>
+</html>
